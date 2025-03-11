@@ -19,6 +19,11 @@ struct AddTransactionView: View {
     @State private var storeLocation = ""
     @State private var brandName = ""
     @State private var showAlert = false
+    @State private var uniqueUnits: [String] = []
+    @State private var uniqueProductFamilies: [String] = []
+    @State private var uniqueStoreNames: [String] = []
+    @State private var uniqueStoreLocations: [String] = []
+    @State private var uniqueBrandNames: [String] = []
     
     // Computed property to calculate unit price
     private var unitPrice: String {
@@ -47,8 +52,8 @@ struct AddTransactionView: View {
                             TextField("Item Description", text: $itemDescription)
                             TextField("Quantity (e.g., 2)", text: $quantity)
                                 .keyboardType(.decimalPad)
-                            TextField("Unit (e.g., each, pound)", text: $unitOfMeasure)
-                            TextField("Product Family", text: $productFamily)
+                            DropdownTextField(placeholder: "Unit (e.g., each, pound)", text: $unitOfMeasure, options: uniqueUnits)
+                            DropdownTextField(placeholder: "Product Family", text: $productFamily, options: uniqueProductFamilies)
                         }
                         .padding()
                         .background(Color.white.opacity(0.8))
@@ -73,8 +78,8 @@ struct AddTransactionView: View {
                         VStack(alignment: .leading, spacing: 10) {
                             Text("Store Details")
                                 .font(.headline)
-                            TextField("Store Name", text: $storeName)
-                            TextField("Store Location", text: $storeLocation)
+                            DropdownTextField(placeholder: "Store Name", text: $storeName, options: uniqueStoreNames)
+                            DropdownTextField(placeholder: "Store Location", text: $storeLocation, options: uniqueStoreLocations)
                         }
                         .padding()
                         .background(Color.white.opacity(0.8))
@@ -84,7 +89,7 @@ struct AddTransactionView: View {
                         VStack(alignment: .leading, spacing: 10) {
                             Text("Optional")
                                 .font(.headline)
-                            TextField("Brand Name", text: $brandName)
+                            DropdownTextField(placeholder: "Brand Name", text: $brandName, options: uniqueBrandNames)
                         }
                         .padding()
                         .background(Color.white.opacity(0.8))
@@ -107,6 +112,23 @@ struct AddTransactionView: View {
             .alert(isPresented: $showAlert) {
                 Alert(title: Text("Invalid Input"), message: Text("Please fill in all required fields with valid data."), dismissButton: .default(Text("OK")))
             }
+            .onAppear {
+                fetchUniqueValues()
+            }
+        }
+    }
+    
+    // Fetch unique values from existing transactions
+    private func fetchUniqueValues() {
+        do {
+            let transactions = try modelContext.fetch(FetchDescriptor<Transaction>())
+            uniqueUnits = Array(Set(transactions.map { $0.unitOfMeasure })).sorted()
+            uniqueProductFamilies = Array(Set(transactions.map { $0.productFamily })).sorted()
+            uniqueStoreNames = Array(Set(transactions.map { $0.storeName })).sorted()
+            uniqueStoreLocations = Array(Set(transactions.map { $0.storeLocation })).sorted()
+            uniqueBrandNames = Array(Set(transactions.compactMap { $0.brandName }.filter { !$0.isEmpty })).sorted()
+        } catch {
+            print("Error fetching transactions: \(error)")
         }
     }
     
@@ -156,7 +178,70 @@ struct AddTransactionView: View {
     }
 }
 
-// Preview provider
+// Helper Views
+
+/// A TextField that triggers an action on long press
+struct LongPressTextField: View {
+    @Binding var text: String
+    let placeholder: String
+    let onLongPress: () -> Void
+    
+    var body: some View {
+        TextField(placeholder, text: $text)
+            .simultaneousGesture(
+                LongPressGesture()
+                    .onEnded { _ in
+                        onLongPress()
+                    }
+            )
+    }
+}
+
+/// A sheet displaying selectable options
+struct OptionsSheet: View {
+    let options: [String]
+    @Binding var selection: String
+    @Environment(\.dismiss) private var dismiss
+    
+    var body: some View {
+        NavigationView {
+            List(options, id: \.self) { option in
+                Button(option) {
+                    selection = option
+                    dismiss()
+                }
+            }
+            .navigationTitle("Select Option")
+        }
+    }
+}
+
+/// A TextField with dropdown capabilities via long press and button
+struct DropdownTextField: View {
+    let placeholder: String
+    @Binding var text: String
+    let options: [String]
+    @State private var showingOptions = false
+    
+    var body: some View {
+        HStack {
+            LongPressTextField(text: $text, placeholder: placeholder) {
+                showingOptions = true
+            }
+            Button(action: {
+                showingOptions = true
+            }) {
+                Image(systemName: "chevron.down")
+            }
+        }
+        .sheet(isPresented: $showingOptions) {
+            OptionsSheet(options: options, selection: $text)
+                .presentationDetents([.medium])
+        }
+    }
+}
+
+// Preview Provider
 struct AddTransactionView_Previews: PreviewProvider {
     static var previews: some View {
         AddTransactionView()
