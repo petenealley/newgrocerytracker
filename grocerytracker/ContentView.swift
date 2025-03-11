@@ -4,21 +4,29 @@
 //
 //  Created by Pete Nealley on 3/10/25.
 //
-
 import SwiftUI
 
 struct ContentView: View {
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
+        TabView {
+            TransactionListView()
+                .tabItem {
+                    Label("Transactions", systemImage: "list.bullet")
+                }
+            AddTransactionView()
+                .tabItem {
+                    Label("Add", systemImage: "plus")
+                }
+            SearchView()
+                .tabItem {
+                    Label("Search", systemImage: "magnifyingglass")
+                }
         }
-        .padding()
     }
 }
 
-#Preview {
-    ContentView()
+struct ContentView_Previews: PreviewProvider {
+    static var previews: some View {
+        ContentView()
+    }
 }

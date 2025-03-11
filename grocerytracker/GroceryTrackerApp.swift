@@ -6,12 +6,14 @@
 //
 
 import SwiftUI
+import SwiftData
 
 @main
-struct grocerytrackerApp: App {
+struct GroceryTrackerApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            SplashScreenView()
         }
+        .modelContainer(for: Transaction.self)
     }
 }
