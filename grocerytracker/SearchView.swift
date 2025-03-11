@@ -15,11 +15,15 @@ struct SearchView: View {
     
     var filteredTransactions: [Transaction] {
         let filtered = transactions.filter { transaction in
-            let itemMatch = searchText.isEmpty || transaction.itemDescription.localizedStandardContains(searchText)
-            let storeNameMatch = searchText.isEmpty || transaction.storeName.localizedStandardContains(searchText)
-            let storeLocationMatch = searchText.isEmpty || transaction.storeLocation.localizedStandardContains(searchText)
+            // Search text condition: true if empty or matches any field
+            let searchMatch = searchText.isEmpty ||
+            transaction.itemDescription.localizedStandardContains(searchText) ||
+            transaction.storeName.localizedStandardContains(searchText) ||
+            transaction.storeLocation.localizedStandardContains(searchText)
+            // Date condition: true if filter is off or dates match
             let dateMatch = !filterByDate || Calendar.current.isDate(transaction.transactionDate, inSameDayAs: selectedDate)
-            return (itemMatch || storeNameMatch || storeLocationMatch) && dateMatch
+            // Combine conditions: transaction must satisfy both
+            return searchMatch && dateMatch
         }
         print("Filtered transactions count: \(filtered.count)") // Debugging output
         return filtered
@@ -27,39 +31,34 @@ struct SearchView: View {
     
     var body: some View {
         NavigationView {
-            ScrollView {
-                VStack(spacing: 20) {
-                    // Search Criteria Section
-                    VStack(alignment: .leading, spacing: 10) {
-                        Text("Search Criteria")
-                            .font(.headline)
-                        
-                        HStack {
-                            TextField("Search (Item, Store, Location)", text: $searchText)
-                                .textFieldStyle(RoundedBorderTextFieldStyle())
-                            
-                            if !searchText.isEmpty || filterByDate {
-                                Button(action: clearSearch) {
-                                    Image(systemName: "xmark.circle.fill")
-                                        .foregroundColor(.gray)
-                                }
-                            }
+            VStack {
+                // Search Input with Clear Button
+                HStack {
+                    TextField("Search (Item, Store, Location)", text: $searchText)
+                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                    if !searchText.isEmpty || filterByDate {
+                        Button(action: clearSearch) {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundColor(.gray)
                         }
-                        
-                        Toggle("Filter by Date", isOn: $filterByDate)
-                        
-                        if filterByDate {
-                            DatePicker("Transaction Date", selection: $selectedDate, displayedComponents: .date)
-                        }
-                    }
-                    .padding()
-                    
-                    // Transaction List with default styling
-                    List(filteredTransactions) { transaction in
-                        TransactionRow(transaction: transaction)
                     }
                 }
                 .padding()
+                
+                // Date Filter Toggle
+                Toggle("Filter by Date", isOn: $filterByDate)
+                    .padding(.horizontal)
+                
+                // Date Picker (shown only when filterByDate is true)
+                if filterByDate {
+                    DatePicker("Transaction Date", selection: $selectedDate, displayedComponents: .date)
+                        .padding(.horizontal)
+                }
+                
+                // Transaction List
+                List(filteredTransactions) { transaction in
+                    TransactionRow(transaction: transaction)
+                }
             }
             .navigationTitle("Search")
         }
