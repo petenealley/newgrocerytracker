@@ -7,66 +7,86 @@
 import SwiftUI
 import SwiftData
 
+// Define the pastel blue color
+//extension Color {
+//    static let pastelBlue = Color(red: 0.68, green: 0.85, blue: 0.90) // Pastel blue
+//}
+
 struct SearchView: View {
     @Query(sort: \Transaction.transactionDate, order: .reverse) var transactions: [Transaction]
     @State private var searchText = ""
     @State private var filterByDate = false
     @State private var selectedDate = Date()
     
+    // Computed property for filtered transactions
     var filteredTransactions: [Transaction] {
-        let filtered = transactions.filter { transaction in
-            // Search text condition: true if empty or matches any field
+        transactions.filter { transaction in
             let searchMatch = searchText.isEmpty ||
             transaction.itemDescription.localizedStandardContains(searchText) ||
             transaction.storeName.localizedStandardContains(searchText) ||
             transaction.storeLocation.localizedStandardContains(searchText)
-            // Date condition: true if filter is off or dates match
             let dateMatch = !filterByDate || Calendar.current.isDate(transaction.transactionDate, inSameDayAs: selectedDate)
-            // Combine conditions: transaction must satisfy both
             return searchMatch && dateMatch
         }
-        print("Filtered transactions count: \(filtered.count)") // Debugging output
-        return filtered
     }
     
     var body: some View {
         NavigationView {
-            VStack {
-                // Search Input with Clear Button
-                HStack {
-                    TextField("Search (Item, Store, Location)", text: $searchText)
-                        .textFieldStyle(RoundedBorderTextFieldStyle())
-                    if !searchText.isEmpty || filterByDate {
-                        Button(action: clearSearch) {
-                            Image(systemName: "xmark.circle.fill")
-                                .foregroundColor(.gray)
+            ZStack {
+                // Apply pastel blue background across the entire screen
+                Color.pastelBlue
+                    .ignoresSafeArea()
+                
+                // Main content with semi-transparent white background for contrast
+                VStack {
+                    // Search input with clear button
+                    HStack {
+                        TextField("Search (Item, Store, Location)", text: $searchText)
+                            .textFieldStyle(RoundedBorderTextFieldStyle())
+                        if !searchText.isEmpty || filterByDate {
+                            Button(action: clearSearch) {
+                                Image(systemName: "xmark.circle.fill")
+                                    .foregroundColor(.gray)
+                            }
                         }
                     }
-                }
-                .padding()
-                
-                // Date Filter Toggle
-                Toggle("Filter by Date", isOn: $filterByDate)
-                    .padding(.horizontal)
-                
-                // Date Picker (shown only when filterByDate is true)
-                if filterByDate {
-                    DatePicker("Transaction Date", selection: $selectedDate, displayedComponents: .date)
+                    .padding()
+                    
+                    // Date filter toggle
+                    Toggle("Filter by Date", isOn: $filterByDate)
                         .padding(.horizontal)
+                    
+                    // Date picker (visible when filterByDate is true)
+                    if filterByDate {
+                        DatePicker("Transaction Date", selection: $selectedDate, displayedComponents: .date)
+                            .padding(.horizontal)
+                    }
+                    
+                    // Transaction list
+                    List(filteredTransactions) { transaction in
+                        TransactionRow(transaction: transaction) // Assuming TransactionRow is defined elsewhere
+                    }
                 }
-                
-                // Transaction List
-                List(filteredTransactions) { transaction in
-                    TransactionRow(transaction: transaction)
-                }
+                .background(Color.white.opacity(0.8)) // Semi-transparent white for readability
+                .cornerRadius(10)
+                .padding()
             }
             .navigationTitle("Search")
         }
     }
     
+    // Clear search and reset filters
     private func clearSearch() {
         searchText = ""
         filterByDate = false
         selectedDate = Date()
+    }
+}
+
+// SwiftUI Preview
+struct SearchView_Previews: PreviewProvider {
+    static var previews: some View {
+        SearchView()
+            .modelContainer(for: Transaction.self, inMemory: true) // In-memory SwiftData context for preview
     }
 }
