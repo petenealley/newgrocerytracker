@@ -43,11 +43,13 @@ struct TransactionListView: View {
             ) {
                 Button("Delete", role: .destructive) {
                     if let transaction = transactionToDelete {
-                        modelContext.delete(transaction)
-                        do {
-                            try modelContext.save()
-                        } catch {
-                            print("Error deleting transaction: \(error)")
+                        withAnimation {
+                            modelContext.delete(transaction)
+                            do {
+                                try modelContext.save()
+                            } catch {
+                                print("Error deleting transaction: \(error)")
+                            }
                         }
                     }
                     transactionToDelete = nil

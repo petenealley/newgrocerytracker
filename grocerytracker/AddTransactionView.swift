@@ -19,6 +19,8 @@ struct AddTransactionView: View {
     @State private var storeLocation = ""
     @State private var brandName = ""
     @State private var showAlert = false
+    // State variables for dropdown options
+    @State private var uniqueItemDescriptions: [String] = [] // Added for Item Description dropdown
     @State private var uniqueUnits: [String] = []
     @State private var uniqueProductFamilies: [String] = []
     @State private var uniqueStoreNames: [String] = []
@@ -39,7 +41,7 @@ struct AddTransactionView: View {
     var body: some View {
         NavigationView {
             ZStack {
-                // Apply the pastel green background across the entire screen
+                // Pastel green background
                 Color.pastelGreen
                     .ignoresSafeArea()
                 
@@ -49,7 +51,7 @@ struct AddTransactionView: View {
                         VStack(alignment: .leading, spacing: 10) {
                             Text("Item Details")
                                 .font(.headline)
-                            TextField("Item Description", text: $itemDescription)
+                            DropdownTextField(placeholder: "Item Description", text: $itemDescription, options: uniqueItemDescriptions) // Updated to DropdownTextField
                             TextField("Quantity (e.g., 2)", text: $quantity)
                                 .keyboardType(.decimalPad)
                             DropdownTextField(placeholder: "Unit (e.g., each, pound)", text: $unitOfMeasure, options: uniqueUnits)
@@ -59,7 +61,7 @@ struct AddTransactionView: View {
                         .background(Color.white.opacity(0.8))
                         .cornerRadius(10)
                         
-                        // Price and Date Section with Unit Price
+                        // Price and Date Section
                         VStack(alignment: .leading, spacing: 10) {
                             Text("Price and Date")
                                 .font(.headline)
@@ -122,6 +124,7 @@ struct AddTransactionView: View {
     private func fetchUniqueValues() {
         do {
             let transactions = try modelContext.fetch(FetchDescriptor<Transaction>())
+            uniqueItemDescriptions = Array(Set(transactions.map { $0.itemDescription })).sorted() // Added
             uniqueUnits = Array(Set(transactions.map { $0.unitOfMeasure })).sorted()
             uniqueProductFamilies = Array(Set(transactions.map { $0.productFamily })).sorted()
             uniqueStoreNames = Array(Set(transactions.map { $0.storeName })).sorted()
@@ -132,6 +135,7 @@ struct AddTransactionView: View {
         }
     }
     
+    // Save the transaction
     private func saveTransaction() {
         guard !itemDescription.isEmpty,
               let quantityDouble = Double(quantity),
@@ -165,6 +169,7 @@ struct AddTransactionView: View {
         }
     }
     
+    // Clear all fields
     private func clearFields() {
         itemDescription = ""
         quantity = ""

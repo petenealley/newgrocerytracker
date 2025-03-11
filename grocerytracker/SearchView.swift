@@ -7,11 +7,6 @@
 import SwiftUI
 import SwiftData
 
-// Define the pastel blue color
-//extension Color {
-//    static let pastelBlue = Color(red: 0.68, green: 0.85, blue: 0.90) // Pastel blue
-//}
-
 struct SearchView: View {
     @Query(sort: \Transaction.transactionDate, order: .reverse) var transactions: [Transaction]
     @State private var searchText = ""
@@ -24,7 +19,9 @@ struct SearchView: View {
             let searchMatch = searchText.isEmpty ||
             transaction.itemDescription.localizedStandardContains(searchText) ||
             transaction.storeName.localizedStandardContains(searchText) ||
-            transaction.storeLocation.localizedStandardContains(searchText)
+            transaction.storeLocation.localizedStandardContains(searchText) ||
+            (transaction.brandName ?? "").localizedStandardContains(searchText) ||
+            transaction.productFamily.localizedStandardContains(searchText)
             let dateMatch = !filterByDate || Calendar.current.isDate(transaction.transactionDate, inSameDayAs: selectedDate)
             return searchMatch && dateMatch
         }
@@ -41,7 +38,7 @@ struct SearchView: View {
                 VStack {
                     // Search input with clear button
                     HStack {
-                        TextField("Search (Item, Store, Location)", text: $searchText)
+                        TextField("Search (Item, Store, Location, Brand, Family)", text: $searchText)
                             .textFieldStyle(RoundedBorderTextFieldStyle())
                         if !searchText.isEmpty || filterByDate {
                             Button(action: clearSearch) {
@@ -64,7 +61,7 @@ struct SearchView: View {
                     
                     // Transaction list
                     List(filteredTransactions) { transaction in
-                        TransactionRow(transaction: transaction) // Assuming TransactionRow is defined elsewhere
+                        TransactionRow(transaction: transaction)
                     }
                 }
                 .background(Color.white.opacity(0.8)) // Semi-transparent white for readability
@@ -87,6 +84,6 @@ struct SearchView: View {
 struct SearchView_Previews: PreviewProvider {
     static var previews: some View {
         SearchView()
-            .modelContainer(for: Transaction.self, inMemory: true) // In-memory SwiftData context for preview
+            .modelContainer(for: Transaction.self, inMemory: true)
     }
 }

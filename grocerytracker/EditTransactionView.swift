@@ -61,6 +61,12 @@ struct EditTransactionView: View {
                 Button("Save Changes") {
                     saveChanges()
                 }
+                .buttonStyle(ScaleButtonStyle())
+                .frame(maxWidth: .infinity)
+                .padding()
+                .background(Color.blue)
+                .foregroundColor(.white)
+                .cornerRadius(8)
             }
             .navigationTitle("Edit Transaction")
             .alert(isPresented: $showAlert) {

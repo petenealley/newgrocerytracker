@@ -10,23 +10,27 @@ struct SplashScreenView: View {
     @State private var isActive = false
     
     var body: some View {
-        if isActive {
-            ContentView()
-        } else {
-            VStack {
-                Image(systemName: "cart.fill")
-                    .font(.system(size: 100))
-                Text("Grocery Tracker")
-                    .font(.largeTitle.bold())
+        ZStack {
+            if isActive {
+                ContentView()
+                    .transition(.opacity)
+            } else {
+                VStack {
+                    Image(systemName: "cart.fill")
+                        .font(.system(size: 100))
+                    Text("Grocery Tracker")
+                        .font(.largeTitle.bold())
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background(Color.blue)
+                .foregroundColor(.white)
+                .transition(.opacity)
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(Color.blue)
-            .foregroundColor(.white)
-            .onAppear {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                    withAnimation {
-                        isActive = true
-                    }
+        }
+        .onAppear {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                withAnimation(.easeInOut(duration: 0.5)) {
+                    isActive = true
                 }
             }
         }

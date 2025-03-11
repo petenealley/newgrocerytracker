@@ -21,6 +21,10 @@ struct ContentView: View {
                 .tabItem {
                     Label("Search", systemImage: "magnifyingglass")
                 }
+            SummaryView()
+                .tabItem {
+                    Label("Summary", systemImage: "chart.bar")
+                }
         }
     }
 }
